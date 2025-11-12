@@ -20,7 +20,7 @@
     <meta name="keywords" content="mobil, bekas, jual, beli, otomotif">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>MobilShift - Cart</title>
+    <title>GoldenToys - Cart</title>
 
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Balsamiq+Sans:wght@400;700&family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -703,7 +703,7 @@
         <div class="container-fluid">
             <div class="inner-header">
                 <div class="logo">
-                    <a href="{{ route('public.home') }}"><h4>MOBILSHIFT</h4></a>
+                    <a href="{{ route('public.home') }}"><h4>GoldenToys</h4></a>
                 </div>
 
                 <!-- Navigation Menu -->
@@ -909,8 +909,8 @@
                 <div class="row">
                     <div class="col-lg-12 col-sm-12">
                         <div class="single-footer-widget">
-                            <h4>Tentang MobilShift</h4>
-                            <p>MobilShift adalah platform terpercaya untuk jual beli mobil bekas berkualitas. Kami menghubungkan pembeli dan penjual dengan menyediakan informasi yang transparan dan akurat tentang setiap kendaraan.</p>
+                            <h4>Tentang GoldenToys</h4>
+                            <p>GoldenToys adalah platform terpercaya untuk jual beli mobil bekas berkualitas. Kami menghubungkan pembeli dan penjual dengan menyediakan informasi yang transparan dan akurat tentang setiap kendaraan.</p>
                             <p>Dengan komitmen untuk memberikan pengalaman terbaik dalam berbelanja mobil bekas, kami terus berinovasi dalam menyajikan informasi yang lengkap dan membantu Anda menemukan mobil impian dengan harga yang terjangkau.</p>
                         </div>                        
                     </div>
@@ -927,7 +927,7 @@
                 </div>
             </div>
             <div class="container text-center pt-3">
-                <p>&copy;<script>document.write(new Date().getFullYear());</script> MobilShift - All rights reserved</p>
+                <p>&copy;<script>document.write(new Date().getFullYear());</script> GoldenToys - All rights reserved</p>
             </div>
         </div>
     </footer>

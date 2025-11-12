@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>MobilShift - Invoice</title>
+    <title>GoldenToys - Invoice</title>
     
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Balsamiq+Sans:wght@400;700&family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -419,7 +419,7 @@
         <div class="container-fluid">
             <div class="inner-header">
                 <div class="logo">
-                    <a href="{{ route('public.home') }}"><h4>MobilShift</h4></a>
+                    <a href="{{ route('public.home') }}"><h4>GoldenToys</h4></a>
                 </div>
 
                 <!-- Navigation Menu -->
@@ -480,7 +480,7 @@
             <div class="row">
                 <div class="col-md-6">
                     <strong><i class="fas fa-store me-2"></i>Dari</strong><br>
-                    <b>MS - MobilShift</b><br>
+                    <b>GoldenToys</b><br>
                     Arengka 1 No 36 D-E, Jl. Soekarno - Hatta,<br>
                     Sidomulyo Tim., Kecamatan Marpoyan, Kota Pekanbaru, Riau 28125<br>
                     <strong><i class="fas fa-phone me-2"></i>No HP:</strong> 0852-6552-7838<br>

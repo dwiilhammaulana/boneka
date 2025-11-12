@@ -856,6 +856,7 @@
             font-size: 0.65rem;
         }
     }
+
 </style>
 </head>
 
@@ -883,11 +884,14 @@
 <header class="header-section">
     <div class="container-fluid">
         <div class="inner-header">
-            <div class="logo">
-                <a href="{{ route('public.home') }}" class="logo-text">
-                    🚗 MobilShift
-                </a>
-            </div>
+<div class="logo-container">
+        <img src="{{ asset('ecomerce/img/logo.png') }}" 
+         alt="Golden Toys Logo" 
+         style="width: 28px; height: 28px; vertical-align: middle;">
+    <a href="{{ route('public.home') }}" class="logo-text">
+        GoldenToys
+    </a>
+</div>
 
             <!-- Menu Navigasi -->
             <nav class="main-menu">

@@ -3,11 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="description" content="MobilShift - Jual Beli Mobil Bekas">
+    <meta name="description" content="GoldenToys - Jual Beli Mobil Bekas">
     <meta name="keywords" content="mobil, bekas, jual, beli, otomotif">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>MobilShift - {{ $product->product_name ?? 'Detail Produk' }}</title>
+    <title>GoldenToys - {{ $product->product_name ?? 'Detail Produk' }}</title>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Balsamiq+Sans:wght@400;700&family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -931,7 +931,7 @@
                 </div>
             </div>
             <div class="container text-center pt-5">
-                <p>&copy;<script>document.write(new Date().getFullYear());</script> MobilShift - All rights reserved</p>
+                <p>&copy;<script>document.write(new Date().getFullYear());</script> GoldenToys - All rights reserved</p>
             </div>
         </div>
     </footer>
