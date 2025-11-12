@@ -680,7 +680,7 @@
         <div class="inner-header">
             <div class="logo">
                 <a href="{{ route('public.home') }}" class="logo-text">
-                    <span class="first-letter">M</span>obilShift
+                    <span class="first-letter"></span>GoldenToys
                 </a>
             </div>
             
