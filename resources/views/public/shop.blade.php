@@ -608,8 +608,8 @@
                 <div class="row">
                     <div class="col-lg-12 text-center">
                         <div class="section-title">
-                            <h2>Mobil Bekas Terbaik</h2>
-                            <p>Temukan mobil bekas berkualitas dengan harga terbaik</p>
+                            <h2>Boneka</h2>
+                            <p>Temukan Boneka berkualitas dengan harga terbaik</p>
                         </div>
                         <ul class="product-controls">
                             <li class="active" data-filter="*">Semua</li>
@@ -633,10 +633,7 @@
                             <div class="divider"></div>
                             <div class="card-body text-center">
                                 <h5 class="card-title">{{ $product->product_name }}</h5>
-                                <p class="text-muted mb-1">
-                                    {{ ucfirst($product->brand ?? 'Brand Tidak Ada') }} • 
-                                    {{ $product->year ?? 'Tahun Tidak Ada' }}
-                                </p>
+                               
                                 <p class="text-danger">Rp{{ number_format($product->price, 0, ',', '.') }}</p>
                             </div>
                         </div>
