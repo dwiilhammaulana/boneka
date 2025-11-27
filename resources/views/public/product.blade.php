@@ -769,8 +769,8 @@
                         <ul class="tags">
                             <li><span>Merek :</span> {{ $product->category->category_name ?? 'Tidak ada' }}</li>
                             <li><span>Warna :</span> {{ $product->warna ?? 'Tidak ada' }}</li>
-                            <li><span>Tahun :</span> {{ $product->tahun ?? 'Tidak ada' }}</li>
-                            <li><span>Kilometer :</span> {{ $product->kilometer ?? 'Tidak ada' }} km</li>
+                          
+                        
                         </ul>
 
                         <form id="addToCartForm" action="{{ route('public.cart') }}" method="POST">
@@ -797,29 +797,11 @@
     <section class="product-specs spad">
         <div class="container">
             <div class="section-title">
-                <h2>Spesifikasi</h2>
+                <h2>Deskripsi</h2>
             </div>
             <div class="product-specs-details">
-                <div class="spec-item">
-                    <div class="spec-title">Nama Produk</div>
-                    <div class="spec-value">{{ $product->product_name }}</div>
-                </div>
-                <div class="spec-item">
-                    <div class="spec-title">Kategori</div>
-                    <div class="spec-value">{{ $product->category->category_name ?? 'Tidak ada' }}</div>
-                </div>
-                <div class="spec-item">
-                    <div class="spec-title">Warna</div>
-                    <div class="spec-value">{{ $product->warna ?? 'Tidak ada' }}</div>
-                </div>
-                <div class="spec-item">
-                    <div class="spec-title">Tahun</div>
-                    <div class="spec-value">{{ $product->tahun ?? 'Tidak ada' }}</div>
-                </div>
-                <div class="spec-item">
-                    <div class="spec-title">Kilometer</div>
-                    <div class="spec-value">{{ $product->kilometer ?? 'Tidak ada' }} km</div>
-                </div>
+                
+                
             </div>
         </div>
     </section>

@@ -349,9 +349,10 @@
                             </div>
 
                             <div class="d-grid mt-4">
-                                <button type="submit" class="btn btn-success">
+                                <button type="button" onclick="payNow()" class="btn btn-success">
                                     <i class="fas fa-paper-plane me-2"></i>Bayar Sekarang
                                 </button>
+
                             </div>
                         @else
                             <div class="alert alert-warning text-center">
@@ -418,6 +419,99 @@
             }
         });
     }, 3000);
+</script>
+
+<script src="https://app.sandbox.midtrans.com/snap/snap.js"
+    data-client-key="{{ config('midtrans.clientKey') }}"></script>
+
+    <script>
+function validateFormBeforePay() {
+    const tanggal = document.getElementById('tanggal_pembayaran').value;
+    const metode = document.getElementById('metode').value;
+    const bukti = document.getElementById('bukti_bayar').value;
+
+    if (!tanggal || !metode || (metode === 'transfer' && !bukti)) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Form belum lengkap!',
+            text: 'Harap lengkapi semua data yang dibutuhkan.',
+            confirmButtonColor: '#F59E0B'
+        });
+        return false;
+    }
+    return true;
+}
+
+function payNow() {
+    const metode = document.getElementById('metode').value;
+
+    // Validasi dulu
+    if (!validateFormBeforePay()) return;
+
+    // Jika metode TUNAI → submit langsung
+    if (metode === 'tunai') {
+        document.getElementById('formPembayaran').submit();
+        return;
+    }
+
+    // Jika metode TRANSFER → pakai Midtrans
+    payWithMidtrans();
+}
+function payWithMidtrans() {
+    const form = document.getElementById('formPembayaran');
+    const formData = new FormData(form);
+
+    fetch("{{ route('payment.snap') }}", {
+        method: "POST",
+        headers: {
+            'X-CSRF-TOKEN': "{{ csrf_token() }}",
+        },
+        body: formData
+    })
+    .then(async res => {
+        if (!res.ok) {
+            const txt = await res.text();
+            throw new Error(txt || 'Gagal generate snap token');
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (data.error) throw new Error(data.error);
+
+        snap.pay(data.snapToken, {
+            onSuccess: function(result){
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'midtrans_result';
+                input.value = JSON.stringify(result);
+                form.appendChild(input);
+                form.submit();
+            },
+            onPending: function(result){
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'midtrans_result';
+                input.value = JSON.stringify(result);
+                form.appendChild(input);
+                form.submit();
+            },
+            onError: function(){
+                Swal.fire({
+                   icon: 'error',
+                   title: 'Terjadi kesalahan pembayaran'
+                });
+            }
+        });
+    })
+    .catch(err => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: err.message
+        });
+    });
+}
+
 </script>
 
 </body>

@@ -867,14 +867,7 @@
     </div>
     
     <!-- Search model -->
-    <div class="search-model">
-        <div class="h-100 d-flex align-items-center justify-content-center">
-            <div class="search-close-switch">+</div>
-            <form class="search-model-form">
-                <input type="text" id="search-input" placeholder="Cari mobil impianmu...">
-            </form>
-        </div>
-    </div>
+    
     <!-- Search model end -->
 
     <!-- Header Section Begin -->
@@ -1054,8 +1047,8 @@
                 <div class="row">
                     <div class="col-lg-12 text-center">
                         <div class="section-title">
-                            <h2>Mobil Bekas Terbaik</h2>
-                            <p>Temukan mobil bekas berkualitas dengan harga terbaik</p>
+                            <h2>Boneka</h2>
+                            <p>Temukan Boneka berkualitas dengan harga terbaik</p>
                         </div>
                         <ul class="product-controls">
                             <li data-filter="*">Semua</li>
@@ -1079,10 +1072,7 @@
                             <div class="divider mx-3 my-2"></div>
                             <div class="card-body text-center">
                                 <h5 class="card-title fw-bold text-capitalize mb-1">{{ $product->product_name }}</h5>
-                                <p class="text-muted mb-1">
-                                    {{ ucfirst($product->brand ?? 'Brand Tidak Ada') }} • 
-                                    {{ $product->year ?? 'Tahun Tidak Ada' }}
-                                </p>
+                               
                                 <p class="fw-bold text-danger mb-3">Rp{{ number_format($product->price, 0, ',', '.') }}</p>
                                 <!-- CTA Button dengan redirect yang sama -->
                                 <a href="{{ route('product.detail', ['id' => $product->product_id]) }}" class="btn btn-primary btn-sm w-100">

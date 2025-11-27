@@ -64,8 +64,16 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::get('/laporan/penjualan', [LaporanController::class, 'index'])->name('laporan.penjualan');
     Route::get('/laporan/mobil_customer', [LaporanController::class, 'mobilDariCustomer'])->name('laporan.mobil_customer');
 
+    
 
 });
+
+Route::post('/payment/snap', [PublicPembayaranController::class, 'getSnapToken'])
+    ->name('payment.snap');
+
+// route untuk midtrans notification (server to server)
+Route::post('/payment/notification', [PublicPembayaranController::class, 'midtransNotification'])
+    ->name('payment.notification');
 
 
 Route::middleware(['auth:customer'])->group(function () {

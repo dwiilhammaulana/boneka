@@ -20,6 +20,7 @@ class Pembayaran extends Model
         'jumlah_bayar',
         'metode',
         'bukti_bayar',
+        'snap_token',
     ];
 
     // Relasi ke model Order (asumsi nama model Order)
