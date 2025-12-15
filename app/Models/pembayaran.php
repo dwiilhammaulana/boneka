@@ -18,7 +18,6 @@ class Pembayaran extends Model
         'order_id',
         'tanggal_pembayaran',
         'jumlah_bayar',
-        'metode',
         'bukti_bayar',
         'snap_token',
     ];

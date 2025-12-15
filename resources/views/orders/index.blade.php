@@ -47,7 +47,7 @@
                                 <td>
                                     <a href="{{ route('orders.show', $order->order_id) }}" class="btn btn-info btn-sm">Detail</a>
                                     <a href="{{ route('cetak-struk', $order->order_id) }}" class="btn btn-primary btn-sm" target="_blank">Cetak Struk</a>    
-                                    <a href="{{ route('orders.edit', $order->order_id) }}" class="btn btn-warning btn-sm">Edit</a>
+                                    {{-- <a href="{{ route('orders.edit', $order->order_id) }}" class="btn btn-warning btn-sm">Edit</a> --}}
                                     {{-- <form action="{{ route('orders.destroy', $order->order_id) }}" method="POST" style="display:inline;">
                                         @csrf
                                         @method('DELETE')

@@ -182,17 +182,38 @@
                 <p class="form-subtitle">Buat akun baru untuk mulai berbelanja</p>
             </div>
             <div class="card-body">
-                <!-- Error Message -->
-                <div class="alert alert-danger mb-4 d-none" id="error-alert">
-                    <ul class="mb-0" id="error-list">
-                        <!-- Error messages will be inserted here -->
-                    </ul>
-                </div>
+                <!-- Session Messages -->
+                @if(session('success'))
+                    <div class="alert alert-success mb-4">
+                        {{ session('success') }}
+                    </div>
+                @endif
+                
+                @if(session('error'))
+                    <div class="alert alert-danger mb-4">
+                        {{ session('error') }}
+                    </div>
+                @endif
 
-                <form id="registration-form" class="needs-validation" novalidate>
+                <!-- Error Messages -->
+                @if($errors->any())
+                    <div class="alert alert-danger mb-4">
+                        <ul class="mb-0">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <!-- Form yang sudah diperbaiki -->
+                <form id="registration-form" method="POST" action="{{ route('register.customer') }}" class="needs-validation" novalidate>
+                    @csrf <!-- CSRF Token WAJIB ada untuk Laravel -->
+                    
                     <div class="form-group">
                         <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Masukkan username" required>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               placeholder="Masukkan username" value="{{ old('username') }}" required>
                         <div class="invalid-feedback">
                             Harap masukkan username.
                         </div>
@@ -200,7 +221,8 @@
 
                     <div class="form-group">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" placeholder="Masukkan email" required>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               placeholder="Masukkan email" value="{{ old('email') }}" required>
                         <div class="invalid-feedback">
                             Harap masukkan email yang valid.
                         </div>
@@ -208,18 +230,19 @@
 
                     <div class="form-group">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan password" required>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Masukkan password" required>
                         <div class="invalid-feedback">
                             Harap masukkan password.
                         </div>
-                        <div class="password-requirements">
-                            Password harus minimal 8 karakter, mengandung huruf besar, huruf kecil, dan angka.
-                        </div>
+                        <!-- Password requirements dihapus -->
                     </div>
 
+                    <!-- Nama field HARUS password_confirmation (bukan hanya id) -->
                     <div class="form-group">
                         <label for="password_confirmation" class="form-label">Konfirmasi Password</label>
-                        <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Konfirmasi password" required>
+                        <input type="password" class="form-control" id="password_confirmation" 
+                               name="password_confirmation" placeholder="Konfirmasi password" required>
                         <div class="invalid-feedback">
                             Harap konfirmasi password.
                         </div>
@@ -227,23 +250,28 @@
 
                     <div class="form-group">
                         <label for="full_name" class="form-label">Nama Lengkap</label>
-                        <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Masukkan nama lengkap" required>
+                        <input type="text" class="form-control" id="full_name" name="full_name" 
+                               placeholder="Masukkan nama lengkap" value="{{ old('full_name') }}" required>
                         <div class="invalid-feedback">
                             Harap masukkan nama lengkap.
                         </div>
                     </div>
 
+                    <!-- Phone number dengan type tel untuk input numerik -->
                     <div class="form-group">
                         <label for="phone_number" class="form-label">Nomor Telepon</label>
-                        <input type="text" class="form-control" id="phone_number" name="phone_number" placeholder="Masukkan nomor telepon" maxlength="13" required>
+                        <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                               placeholder="Masukkan nomor telepon" value="{{ old('phone_number') }}" 
+                               pattern="[0-9]*" inputmode="numeric" required>
                         <div class="invalid-feedback" id="phone-error">
-                            Nomor telepon tidak boleh lebih dari 13 karakter.
+                            Harap masukkan nomor telepon yang valid (hanya angka).
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="address" class="form-label">Alamat</label>
-                        <input type="text" class="form-control" id="address" name="address" placeholder="Masukkan alamat" required>
+                        <input type="text" class="form-control" id="address" name="address" 
+                               placeholder="Masukkan alamat" value="{{ old('address') }}" required>
                         <div class="invalid-feedback">
                             Harap masukkan alamat.
                         </div>
@@ -263,25 +291,22 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Form validation
+        // Form validation - DIPERBAIKI untuk tidak mencegah form submission
         (function() {
             'use strict';
             window.addEventListener('load', function() {
-                // Fetch all the forms we want to apply custom Bootstrap validation styles to
                 var forms = document.getElementsByClassName('needs-validation');
-                // Loop over them and prevent submission
+                
                 var validation = Array.prototype.filter.call(forms, function(form) {
                     form.addEventListener('submit', function(event) {
+                        // Hanya cek validitas, biarkan form submit jika valid
                         if (form.checkValidity() === false) {
                             event.preventDefault();
                             event.stopPropagation();
-                        } else {
-                            // If form is valid, show success message
-                            event.preventDefault();
-                            alert('Pendaftaran berhasil! Data Anda telah disimpan.');
-                            form.reset();
-                            form.classList.remove('was-validated');
                         }
+                        // JANGAN panggil event.preventDefault() jika form valid
+                        // Biarkan form submit secara normal ke server
+                        
                         form.classList.add('was-validated');
                     }, false);
                 });
@@ -293,40 +318,34 @@
             const phoneInput = this;
             const phoneError = document.getElementById('phone-error');
             
-            if (phoneInput.value.length > 13) {
-                phoneInput.classList.add('is-invalid');
-                phoneError.textContent = 'Nomor telepon tidak boleh lebih dari 13 karakter.';
-            } else {
-                phoneInput.classList.remove('is-invalid');
-            }
-        });
-
-        // Password validation
-        document.getElementById('password').addEventListener('input', function() {
-            const password = this.value;
-            const hasUpperCase = /[A-Z]/.test(password);
-            const hasLowerCase = /[a-z]/.test(password);
-            const hasNumbers = /\d/.test(password);
-            const hasMinimumLength = password.length >= 8;
+            // Hanya izinkan angka
+            phoneInput.value = phoneInput.value.replace(/[^0-9]/g, '');
             
-            if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasMinimumLength) {
-                this.classList.add('is-invalid');
-            } else {
-                this.classList.remove('is-invalid');
-            }
+            // Hapus validasi custom untuk Laravel numeric validation
+            // Laravel akan handle validasi numeric di server side
         });
 
-        // Confirm password validation
+        // Validasi sederhana untuk konfirmasi password saja
         document.getElementById('password_confirmation').addEventListener('input', function() {
             const password = document.getElementById('password').value;
             const confirmPassword = this.value;
             
+            // Validasi hanya untuk konfirmasi password (tidak ada syarat khusus)
             if (password !== confirmPassword) {
                 this.classList.add('is-invalid');
-                this.setCustomValidity('Password tidak cocok');
             } else {
                 this.classList.remove('is-invalid');
-                this.setCustomValidity('');
+            }
+        });
+        
+        // Hapus validasi kompleks untuk password
+        // Tidak ada syarat khusus untuk password
+        document.getElementById('password').addEventListener('input', function() {
+            // Hanya cek jika ada minimal 1 karakter
+            if (this.value.length < 1) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
             }
         });
     </script>

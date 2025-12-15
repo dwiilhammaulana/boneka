@@ -65,11 +65,11 @@
                         </td>
                         <td class="text-center">
                             <a href="{{ route('pembayaran.show', $pembayaran->id_pembayaran) }}" class="btn btn-info btn-sm">Detail</a>
-                            <a href="{{ route('pembayaran.edit', $pembayaran->id_pembayaran) }}" class="btn btn-warning btn-sm">Edit</a>
+                            {{-- <a href="{{ route('pembayaran.edit', $pembayaran->id_pembayaran) }}" class="btn btn-warning btn-sm">Edit</a>
                             <form action="{{ route('pembayaran.destroy', $pembayaran->id_pembayaran) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</button>
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</button> --}}
                             </form>
                         </td>
                     </tr>

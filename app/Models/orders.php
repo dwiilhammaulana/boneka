@@ -9,53 +9,61 @@ class orders extends Model
 {
     use HasFactory;
 
-    // Menentukan nama tabel yang digunakan
+    // Nama tabel
     protected $table = 'orders';
 
-    // Menentukan kolom yang dapat diisi
+    // Primary key
+    protected $primaryKey = 'order_id';
+
+    // Auto increment
+    public $incrementing = true;
+
+    // Tipe PK
+    protected $keyType = 'int';
+
+    // Kolom yang boleh diisi
     protected $fillable = [
         'customer_id',
         'order_date',
-        'total_price',
-        'bukti_pesanan',
         'status',
-        'sisa_tagihan',
-        'ktp',
-        'stnk',
-        'bpkb',
-        'logistik',
+        'payment_method',
+        'total_price',
+        'shipping_cost',
+        'grand_total',
+        'receiver_name',
+        'receiver_phone',
+        'shipping_address',
+        'customer_note',
     ];
 
-    public function details()
-    {
-        return $this->hasMany(orders_details::class, 'order_id', 'order_id');
-    }
+    // Casting tipe data
+    protected $casts = [
+        'order_date'    => 'datetime',
+        'total_price'   => 'decimal:2',
+        'shipping_cost' => 'decimal:2',
+        'grand_total'   => 'decimal:2',
+    ];
 
-    // Menentukan bahwa order menggunakan timestamps
+    // Timestamps aktif (created_at & updated_at ada di tabel)
     public $timestamps = true;
 
-    // Menambahkan custom primary key jika diperlukan
-    protected $primaryKey = 'order_id';
+    /* ================= RELATION ================= */
 
-    // Menentukan tipe data untuk total_price
-    protected $casts = [
-        'total_price' => 'decimal:2',
-    ];
-
-    // Relasi dengan Customer model (One-to-Many)
+    // Order -> Customer (Many to One)
     public function customer()
     {
         return $this->belongsTo(customers::class, 'customer_id', 'customer_id');
     }
 
-    // Relasi dengan OrderDetail model (One-to-Many)
+    // Order -> Order Detail (One to Many)
     public function orderDetails()
     {
         return $this->hasMany(orders_details::class, 'order_id', 'order_id');
     }
-    public function pembayaran()
-{
-    return $this->hasMany(\App\Models\Pembayaran::class, 'order_id');
-}
 
+    // Order -> Pembayaran (One to Many)
+    public function pembayaran()
+    {
+        return $this->hasMany(\App\Models\Pembayaran::class, 'order_id', 'order_id');
+    }
 }

@@ -242,14 +242,21 @@
 </head>
 <body>
 
+
 <div class="payment-container">
     <h1 class="page-title">
-        <i class="fas fa-credit-card"></i>Form Pembayaran GoldenToys
+        <i class="fas fa-credit-card"></i> Form Pembayaran GoldenToys
     </h1>
 
     @if(session('success'))
         <div class="alert alert-success" id="success-alert">
             <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger" id="error-alert">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
         </div>
     @endif
 
@@ -263,100 +270,94 @@
         <div class="col-lg-10">
             <div class="card">
                 <div class="card-header">
-                    <h5><i class="fas fa-file-invoice-dollar me-2"></i>Detail Pembayaran</h5>
+                    <h5><i class="fas fa-file-invoice-dollar me-2"></i> Detail Pembayaran</h5>
                 </div>
                 <div class="card-body">
-                    <form id="formPembayaran" action="{{ route('public.PublicPembayaran.store') }}" method="POST" enctype="multipart/form-data">
+                    <!-- PERUBAHAN DI SINI: route('public.pembayaran.store') -->
+                    <form id="formPembayaran" action="{{ route('public.pembayaran.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
-                        @if(!empty($selectedOrderId))
-                            @php
-                                $order = $orders->where('order_id', $selectedOrderId)->first();
-                            @endphp
-
-                            @if($order)
-                                <div class="order-detail">
-                                    <h6><i class="fas fa-receipt me-2"></i>Detail Pesanan</h6>
-                                    <div class="detail-row">
-                                        <span class="detail-label">No Pesanan:</span>
-                                        <span class="badge-custom">ID: {{ $order->order_id }}</span>
-                                    </div>
-                                    <input type="hidden" name="order_id" value="{{ $order->order_id }}">
+                        @if($order)
+                            <div class="order-detail">
+                                <h6><i class="fas fa-receipt me-2"></i> Detail Pesanan</h6>
+                                <div class="detail-row">
+                                    <span class="detail-label">No Pesanan:</span>
+                                    <span class="badge-custom">ID: {{ $order->order_id }}</span>
                                 </div>
-
-                                <div class="row mb-4">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label"><i class="fas fa-money-bill-wave me-2"></i>Total Bayar</label>
-                                        <input type="text" class="form-control bg-light" value="Rp {{ number_format($order->total_price, 0, ',', '.') }}" readonly>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label"><i class="fas fa-receipt me-2"></i>Sisa Tagihan</label>
-                                        <input type="text" class="form-control bg-light" value="Rp {{ number_format($order->sisa_tagihan, 0, ',', '.') }}" readonly>
-                                    </div>
+                                <input type="hidden" name="order_id" value="{{ $order->order_id }}">
+                                
+                                <div class="mt-3">
+                                    <p><strong>Total Pesanan:</strong> Rp {{ number_format($order->grand_total, 0, ',', '.') }}</p>
+                                    <p><strong>Status:</strong> 
+                                        <span class="badge bg-warning">Menunggu Pembayaran</span>
+                                    </p>
                                 </div>
-                            @else
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>Pesanan tidak ditemukan.
-                                </div>
-                            @endif
-
-                            <div class="mb-4">
-                                <label class="form-label"><i class="fas fa-money-check me-2"></i>Jenis Pembayaran</label>
-                                <input type="text" class="form-control bg-light" value="{{ ucfirst($jenisPembayaran) }}" readonly>
-                                <input type="hidden" name="jenis_pembayaran" value="{{ $jenisPembayaran }}">
                             </div>
 
-                            <div class="row">
+                            <div class="row mb-4">
                                 <div class="col-md-6 mb-3">
-                                    <label for="tanggal_pembayaran" class="form-label">
-                                        <i class="fas fa-calendar-day me-2"></i>Tanggal Pembayaran
-                                    </label>
+                                    <label class="form-label"><i class="fas fa-money-bill-wave me-2"></i> Jumlah yang Harus Dibayar</label>
+                                    <input type="text" class="form-control bg-light" 
+                                           value="Rp {{ number_format($order->grand_total, 0, ',', '.') }}" readonly>
+                                    <input type="hidden" name="jumlah_bayar" value="{{ $order->grand_total }}">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="fas fa-calendar-day me-2"></i> Tanggal Pembayaran</label>
                                     <input type="date" name="tanggal_pembayaran" id="tanggal_pembayaran"
                                            class="form-control @error('tanggal_pembayaran') is-invalid @enderror"
-                                           value="{{ old('tanggal_pembayaran', date('Y-m-d')) }}">
+                                           value="{{ old('tanggal_pembayaran', date('Y-m-d')) }}" required>
                                     @error('tanggal_pembayaran')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
+                            </div>
 
-                                <div class="col-md-6 mb-3">
-                                    <label for="metode" class="form-label">
-                                        <i class="fas fa-credit-card me-2"></i>Metode Pembayaran
-                                    </label>
-                                    <select name="metode" id="metode" class="form-select @error('metode') is-invalid @enderror" onchange="toggleBuktiBayar()">
-                                        <option value="" disabled selected>Pilih Metode</option>
-                                        <option value="tunai" {{ old('metode') == 'tunai' ? 'selected' : '' }}>Tunai</option>
-                                        <option value="transfer" {{ old('metode') == 'transfer' ? 'selected' : '' }}>Transfer</option>
-                                    </select>
-                                    @error('metode')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                            
+                          
+
+                            <!-- Informasi Rekening -->
+                            <div class="alert alert-info mb-4">
+                                <h6><i class="fas fa-university me-2"></i> Informasi Rekening Pembayaran</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Bank:</strong> BCA (Bank Central Asia)</p>
+                                        <p class="mb-1"><strong>No. Rekening:</strong> 1234 5678 9012</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Atas Nama:</strong> GoldenToys Indonesia</p>
+                                        <p class="mb-0"><strong>Jumlah Transfer:</strong> Rp {{ number_format($order->grand_total, 0, ',', '.') }}</p>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="mb-4" id="bukti-bayar-group" style="display: none;">
-                                <label for="bukti_bayar" class="form-label">
-                                    <i class="fas fa-upload me-2"></i>Upload Bukti Pembayaran
-                                </label>
-                                <input type="file" name="bukti_bayar" id="bukti_bayar" class="form-control @error('bukti_bayar') is-invalid @enderror" accept=".jpg,.jpeg,.png,.pdf">
-                                <div class="form-text text-muted mt-2">
-                                    <i class="fas fa-info-circle me-1"></i>Format: JPG, JPEG, PNG, PDF. Maksimal 2MB.
-                                </div>
-                                @error('bukti_bayar')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                            <!-- Catatan -->
+                            <div class="alert alert-warning mb-4">
+                                <h6><i class="fas fa-exclamation-triangle me-2"></i> Catatan Penting</h6>
+                                <ul class="mb-0">
+                                    <li>Pastikan jumlah transfer sesuai dengan total pesanan</li>
+                                    <li>Upload bukti transfer yang jelas dan terbaca</li>
+                                    <li>Pesanan akan diproses setelah pembayaran diverifikasi</li>
+                                    <li>Verifikasi pembayaran membutuhkan waktu 1-3 jam kerja</li>
+                                </ul>
                             </div>
 
-                            <div class="d-grid mt-4">
+                            <div class="d-grid gap-2 mt-4">
                                 <button type="button" onclick="payNow()" class="btn btn-success">
-                                    <i class="fas fa-paper-plane me-2"></i>Bayar Sekarang
+                                    <i class="fas fa-paper-plane me-2"></i> Bayar Sekarang
                                 </button>
-
+                                <a href="{{ route('public.pesanan') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i> Kembali ke Pesanan
+                                </a>
                             </div>
                         @else
                             <div class="alert alert-warning text-center">
-                                <i class="fas fa-shopping-cart me-2"></i>Silakan pilih pesanan terlebih dahulu.
+                                <i class="fas fa-shopping-cart me-2"></i> Pesanan tidak ditemukan atau sudah dibayar.
+                            </div>
+                            <div class="text-center">
+                                <a href="{{ route('public.pesanan') }}" class="btn btn-primary">
+                                    <i class="fas fa-arrow-left me-2"></i> Kembali ke Pesanan
+                                </a>
                             </div>
                         @endif
                     </form>
@@ -365,51 +366,78 @@
         </div>
     </div>
 </div>
+ 
 
-<script>
-    function toggleBuktiBayar() {
-        const metode = document.getElementById('metode').value;
-        const buktiGroup = document.getElementById('bukti-bayar-group');
-        const buktiInput = document.getElementById('bukti_bayar');
 
-        if (metode === 'transfer') {
-            buktiGroup.style.display = 'block';
-            buktiInput.required = true;
-        } else {
-            buktiGroup.style.display = 'none';
-            buktiInput.required = false;
-            buktiInput.value = '';
-        }
+<script src="https://app.sandbox.midtrans.com/snap/snap.js"
+    data-client-key="{{ config('midtrans.clientKey') }}"></script>
+
+   <script>
+function payNow() {
+    const tanggal = document.getElementById('tanggal_pembayaran').value;
+
+    if (!tanggal) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Tanggal belum diisi',
+            confirmButtonColor: '#F59E0B'
+        });
+        return;
     }
 
-    // Trigger on page load if old value exists
-    window.onload = function () {
-        toggleBuktiBayar();
-    };
+    payWithMidtrans();
+}
 
-    // SweetAlert form validation
-    document.getElementById('formPembayaran').addEventListener('submit', function (e) {
-        const tanggal = document.getElementById('tanggal_pembayaran').value;
-        const metode = document.getElementById('metode').value;
-        const bukti = document.getElementById('bukti_bayar').value;
+function payWithMidtrans() {
+    const form = document.getElementById('formPembayaran');
+    const formData = new FormData(form);
 
-        if (!tanggal || !metode || (metode === 'transfer' && !bukti)) {
-            e.preventDefault();
-            Swal.fire({
-                icon: 'warning',
-                title: 'Form belum lengkap!',
-                text: 'Harap lengkapi semua data yang dibutuhkan.',
-                confirmButtonColor: '#F59E0B',
-                confirmButtonText: 'OK',
-                background: 'var(--light-bg)',
-                color: '#4A5568'
-            });
+    fetch("{{ route('payment.snap') }}", {
+        method: "POST",
+        headers: {
+            'X-CSRF-TOKEN': "{{ csrf_token() }}"
+        },
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.snapToken) {
+            throw new Error('Snap token gagal dibuat');
         }
-    });
 
+        snap.pay(data.snapToken, {
+            onSuccess: function(result) {
+                submitMidtransResult(result);
+            },
+            onPending: function(result) {
+                submitMidtransResult(result);
+            },
+            onError: function() {
+                Swal.fire('Gagal', 'Pembayaran gagal', 'error');
+            }
+        });
+    })
+    .catch(err => {
+        Swal.fire('Error', err.message, 'error');
+    });
+}
+
+function submitMidtransResult(result) {
+    const form = document.getElementById('formPembayaran');
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'midtrans_result';
+    input.value = JSON.stringify(result);
+    form.appendChild(input);
+    form.submit();
+}
+</script>
+
+
+<script>
     // Hide alert after 3 seconds
     setTimeout(() => {
-        const alerts = ['success-alert', 'info-alert'];
+        const alerts = ['success-alert', 'error-alert', 'info-alert'];
         alerts.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -419,99 +447,8 @@
             }
         });
     }, 3000);
-</script>
 
-<script src="https://app.sandbox.midtrans.com/snap/snap.js"
-    data-client-key="{{ config('midtrans.clientKey') }}"></script>
-
-    <script>
-function validateFormBeforePay() {
-    const tanggal = document.getElementById('tanggal_pembayaran').value;
-    const metode = document.getElementById('metode').value;
-    const bukti = document.getElementById('bukti_bayar').value;
-
-    if (!tanggal || !metode || (metode === 'transfer' && !bukti)) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Form belum lengkap!',
-            text: 'Harap lengkapi semua data yang dibutuhkan.',
-            confirmButtonColor: '#F59E0B'
-        });
-        return false;
-    }
-    return true;
-}
-
-function payNow() {
-    const metode = document.getElementById('metode').value;
-
-    // Validasi dulu
-    if (!validateFormBeforePay()) return;
-
-    // Jika metode TUNAI → submit langsung
-    if (metode === 'tunai') {
-        document.getElementById('formPembayaran').submit();
-        return;
-    }
-
-    // Jika metode TRANSFER → pakai Midtrans
-    payWithMidtrans();
-}
-function payWithMidtrans() {
-    const form = document.getElementById('formPembayaran');
-    const formData = new FormData(form);
-
-    fetch("{{ route('payment.snap') }}", {
-        method: "POST",
-        headers: {
-            'X-CSRF-TOKEN': "{{ csrf_token() }}",
-        },
-        body: formData
-    })
-    .then(async res => {
-        if (!res.ok) {
-            const txt = await res.text();
-            throw new Error(txt || 'Gagal generate snap token');
-        }
-        return res.json();
-    })
-    .then(data => {
-        if (data.error) throw new Error(data.error);
-
-        snap.pay(data.snapToken, {
-            onSuccess: function(result){
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'midtrans_result';
-                input.value = JSON.stringify(result);
-                form.appendChild(input);
-                form.submit();
-            },
-            onPending: function(result){
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'midtrans_result';
-                input.value = JSON.stringify(result);
-                form.appendChild(input);
-                form.submit();
-            },
-            onError: function(){
-                Swal.fire({
-                   icon: 'error',
-                   title: 'Terjadi kesalahan pembayaran'
-                });
-            }
-        });
-    })
-    .catch(err => {
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal',
-            text: err.message
-        });
-    });
-}
-
+   
 </script>
 
 </body>

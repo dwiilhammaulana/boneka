@@ -18,9 +18,6 @@ use App\Http\Controllers\contactController;
 use App\Http\Controllers\pembayaranController;
 use App\Http\Controllers\laporanController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Public\PublicPembayaranController;
-
-
 
 /*
 |--------------------------------------------------------------------------
@@ -37,21 +34,31 @@ Route::get('/', function () {
     return redirect('login');
 });
 
+// Authentication Routes
 Route::resource('login', loginController::class)->only(['index', 'store']);
 Route::resource('login', LoginController::class)
     ->only(['index', 'store'])
     ->names([
         'index' => 'login',
     ]);
-    Route::get('/register/admin', [AuthController::class, 'createAdmin'])->name('register.admin');
-    Route::post('/register/admin', [AuthController::class, 'storeAdmin'])->name('register.admin.store');
-    
-    Route::get('/register/customer', [AuthController::class, 'createCustomer'])->name('register.customer');
-    Route::post('/register/customer', [AuthController::class, 'storeCustomer'])->name('register.customer.store');
+
+// Registration Routes
+Route::get('/register/admin', [AuthController::class, 'createAdmin'])->name('register.admin');
+Route::post('/register/admin', [AuthController::class, 'storeAdmin'])->name('register.admin.store');
+Route::get('/register/customer', [AuthController::class, 'createCustomer'])->name('register.customer');
+Route::post('/register/customer', [AuthController::class, 'storeCustomer'])->name('register.customer.store');
+
+// Public Routes (No Authentication Required)
+Route::get('/home', [homeController::class, 'index'])->name('public.home');
+Route::get('/shop', [shopController::class, 'index'])->name('public.shop');
+Route::get('/contact', [contactController::class, 'index'])->name('public.contact');
+Route::post('/contact', [contactController::class, 'store'])->name('public.contact.store');
+
+// Admin Routes
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.index');
     Route::post('/logout', [AdminController::class, 'logout'])->name('admin.logout');
-    Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
+    
     Route::resource('admin', adminController::class);
     Route::resource('categories', CategoriesController::class);
     Route::resource('products', ProductsController::class);
@@ -60,95 +67,57 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::resource('dashboard', AdminDashboardController::class);
     Route::resource('contact_us', contact_usController::class);
     Route::resource('pembayaran', pembayaranController::class);
-    // Route::resource('laporan', laporanController::class);
+    
+    // Laporan Routes
     Route::get('/laporan/penjualan', [LaporanController::class, 'index'])->name('laporan.penjualan');
     Route::get('/laporan/mobil_customer', [LaporanController::class, 'mobilDariCustomer'])->name('laporan.mobil_customer');
-
     
-
+    // Contact Management
+    Route::delete('/contact/{id}', [contactController::class, 'destroy'])->name('admin.contact.destroy');
+    
+    // Order Status Update
+    Route::post('/orders/update-status/{id}', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    Route::post('/orders/{id}/logistik', [OrderController::class, 'updateLogistik']);
 });
 
-Route::post('/payment/snap', [PublicPembayaranController::class, 'getSnapToken'])
-    ->name('payment.snap');
-
-// route untuk midtrans notification (server to server)
-Route::post('/payment/notification', [PublicPembayaranController::class, 'midtransNotification'])
-    ->name('payment.notification');
-
-
+// Customer Routes
 Route::middleware(['auth:customer'])->group(function () {
-
-// Route::get('/pembayaran/createcustomer', [PembayaranController::class, 'create'])
-//     ->name('pembayaran.createcustomer');
-
-    //percobaan
-    // Route::get('/pembayaran/{order_id}', [PembayaranController::class, 'createForOrder'])->name('pembayaran.createForOrder');
-    // Route::post('/pembayaran', [PembayaranController::class, 'store'])->name('pembayaran.store');
+    // Pembayaran Routes
+    Route::get('/public/pembayaran/create', [pembayaranController::class, 'create'])->name('public.pembayaran.create');
+    Route::post('/public/pembayaran', [pembayaranController::class, 'store'])->name('public.pembayaran.store');
     
-
-Route::prefix('public')->name('public.')->middleware('auth:customer')->group(function () {
-    Route::get('pembayaran/create', [PublicPembayaranController::class, 'create'])->name('PublicPembayaran.create');
-    Route::post('pembayaran/store', [PublicPembayaranController::class, 'store'])->name('PublicPembayaran.store');
-    
-});
-// Route::get('/public/pembayaran/create', [PublicPembayaranController::class, 'create'])
-//     ->name('PublicPembayaran.create');
-
-// Route::post('/public/pembayaran', [PublicPembayaranController::class, 'store'])
-//     ->name('PublicPembayaran.store');
-
-
-
-
-
-    // Route untuk logout customer
+    // Customer Profile
     Route::post('/customer/logout', [customersController::class, 'logout'])->name('customer.logout');
-
-    Route::get('/customers/{id}/edit', [CustomersController::class, 'edit'])->name('public.profile');
-    Route::put('/customers/{id}', [CustomersController::class, 'update'])->name('public.profile');
-
-    // Rute untuk menambahkan produk ke keranjang
-    Route::post('/cart', [CartController::class, 'addToCart'])->name('public.cart')->middleware('auth');
-
-    // Rute untuk melihat halaman keranjang
-    Route::get('/cart', [CartController::class, 'viewCart'])->name('public.cart.view');
- 
-
-    // Rute untuk menghapus produk dari keranjang menggunakan POST
-    Route::post('/cart/remove', [CartController::class, 'removeFromCart']);
-
-    // Rute untuk melihat detail produk
-    Route::get('/product/{id}', [productsController::class, 'detail'])->name('product.detail');
-
-    // Rute untuk melihat profil customer
+    Route::get('/customers/{id}/edit', [customersController::class, 'edit'])->name('public.profile');
+    Route::put('/customers/{id}', [customersController::class, 'update'])->name('customers.update');
     Route::get('/profile', [customersController::class, 'profile'])->name('customer.profile');
-
-    // Rute untuk melihat pesanan customer
+    
+    // Cart Routes
+    Route::post('/cart', [CartController::class, 'addToCart'])->name('public.cart');
+    Route::get('/cart', [CartController::class, 'viewCart'])->name('public.cart.view');
+    Route::post('/cart/remove', [CartController::class, 'removeFromCart'])->name('cart.remove');
+    Route::get('/cart/count', [CartController::class, 'getCartCount'])->name('cart.count');
+    
+    // Product Details
+    Route::get('/product/{id}', [productsController::class, 'detail'])->name('product.detail');
+    
+    // Order Routes
     Route::get('/orders', [orderController::class, 'index'])->name('customer.orders');
     Route::get('/checkout', [orderController::class, 'create'])->name('checkout');
     Route::post('/checkout', [OrderController::class, 'store'])->name('orders.store');
-    Route::put('/customers/{id}/update', [customersController::class, 'update'])->name('customers.update');
-
     Route::get('/pesanan', [orderController::class, 'history'])->name('public.pesanan');
     Route::get('/cetak-struk/{orderId}', [orderController::class, 'cetakStruk'])->name('cetak-struk');
+    
+    // Order Actions
+    Route::post('/orders/{order}/cancel', [orderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{id}/complete', [orderController::class, 'complete'])->name('orders.complete');
+    
+    // Pembayaran API
     Route::get('/pembayaran/{orderId}', [pembayaranController::class, 'pembayaran'])->name('pembayaran');
+    
+    // PDF
     Route::get('/generate-pdf', [PdfController::class, 'generatePdf']);
-
-    // web.php
-Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
-Route::post('/orders/{id}/logistik', [OrderController::class, 'updateLogistik']);
-
-
 });
 
-Route::get('/home', [homeController::class, 'index'])->name('public.home');
-
-Route::get('/shop', [shopController::class, 'index'])->name('public.shop');
-
-Route::get('/contact', [contactController::class, 'index'])->name('public.contact');
-Route::post('/contact', [contactController::class, 'store'])->name('public.contact.store');
-Route::delete('/contact/{id}', [contactController::class, 'destroy'])->name('public.contact.destroy');
-
-
-Route::put('/customers/{id}', [customersController::class, 'update'])->name('customers.update');
-Route::post('/orders/update-status/{id}', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+Route::post('/payment/snap', [PembayaranController::class, 'getSnapToken'])
+    ->name('payment.snap');

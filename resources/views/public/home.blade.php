@@ -1061,28 +1061,73 @@
             </div>
 
             <div class="row" id="product-list">
-                @foreach($products->where('status', 'approved') as $product)
-                    <div class="col-lg-3 col-md-6 col-sm-6 mix all {{ strtolower($product->category->category_name ?? 'lainnya') }}">
-                        <div class="product-card card border rounded-4 shadow-sm mb-4 overflow-hidden bg-white transition">
-                            <a href="{{ route('product.detail', ['id' => $product->product_id]) }}">
-                                <div class="product-image-container">
-                                    <img src="{{ asset('img/' . $product->image_url) }}" alt="{{ $product->product_name }}">
-                                </div>
-                            </a>
-                            <div class="divider mx-3 my-2"></div>
-                            <div class="card-body text-center">
-                                <h5 class="card-title fw-bold text-capitalize mb-1">{{ $product->product_name }}</h5>
-                               
-                                <p class="fw-bold text-danger mb-3">Rp{{ number_format($product->price, 0, ',', '.') }}</p>
-                                <!-- CTA Button dengan redirect yang sama -->
-                                <a href="{{ route('product.detail', ['id' => $product->product_id]) }}" class="btn btn-primary btn-sm w-100">
-                                    <i class="fas fa-eye me-2"></i>Lihat Detail
-                                </a>
-                            </div>
-                        </div>
+    @foreach($products as $product)
+        @php
+            $hargaAsli = $product->price;
+            $hargaJual = $product->harga_jual;
+            $diskon = $product->discount;
+
+            // Jika discount berupa persen
+            if ($hargaAsli > 0 && $hargaJual > 0) {
+                $persenDiskon = round((($hargaAsli - $hargaJual) / $hargaAsli) * 100);
+            } else {
+                $persenDiskon = $diskon ?? 0;
+            }
+        @endphp
+
+        <div class="col-lg-3 col-md-6 col-sm-6 mix all {{ strtolower($product->category->category_name ?? 'lainnya') }}">
+            <div class="product-card card border rounded-4 shadow-sm mb-4 overflow-hidden bg-white">
+
+                <!-- Image -->
+                <a href="{{ route('product.detail', ['id' => $product->product_id]) }}">
+                    <div class="product-image-container">
+                        <img src="{{ asset('img/' . $product->image_url) }}" 
+                             alt="{{ $product->product_name }}">
                     </div>
-                @endforeach
+                </a>
+
+                <div class="divider mx-3 my-2"></div>
+
+                <div class="card-body text-center">
+                    <h5 class="card-title fw-bold text-capitalize mb-1">
+                        {{ $product->product_name }}
+                    </h5>
+
+                    <!-- Harga seperti Shopee -->
+                    <div class="price-section mb-3">
+
+                        <!-- Harga Coret -->
+                        <p class="text-muted text-decoration-line-through mb-1" style="font-size: 14px;">
+                            Rp{{ number_format($hargaAsli, 0, ',', '.') }}
+                        </p>
+
+                        <!-- Harga Setelah Diskon -->
+                        <p class="fw-bold text-danger mb-1" style="font-size: 18px;">
+                            Rp{{ number_format($hargaJual, 0, ',', '.') }}
+                        </p>
+
+                        <!-- Persentase Diskon -->
+                        @if($persenDiskon > 0)
+                            <span class="badge bg-danger rounded-pill px-3 py-1">
+                                -{{ $persenDiskon }}%
+                            </span>
+                        @endif
+
+                    </div>
+
+                    <!-- Tombol Detail -->
+                    <a href="{{ route('product.detail', ['id' => $product->product_id]) }}" 
+                       class="btn btn-primary btn-sm w-100">
+                        <i class="fas fa-eye me-2"></i>Lihat Detail
+                    </a>
+                </div>
+
             </div>
+
+
+        </div>
+    @endforeach
+</div>
         </div>
     </section>
 

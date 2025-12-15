@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 04, 2025 at 03:14 PM
+-- Generation Time: Dec 14, 2025 at 06:49 AM
 -- Server version: 8.0.30
--- PHP Version: 8.3.23
+-- PHP Version: 8.2.28
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -43,7 +43,8 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`admin_id`, `username`, `password`, `email`, `full_name`, `phone_number`, `created_at`, `updated_at`) VALUES
-(1, 'ilham', '$2y$12$oMcYT3nr9l6YRaqwKfPGN.zNZgeYoMN81eHaKHTTJrlLuiUZXF3cu', 'ilham@gmail.com', 'ilham', '085691185824', '2025-05-11 20:31:14', '2025-05-11 20:31:14');
+(1, 'ilham', '$2y$12$oMcYT3nr9l6YRaqwKfPGN.zNZgeYoMN81eHaKHTTJrlLuiUZXF3cu', 'ilham@gmail.com', 'ilham', '085691185824', '2025-05-11 20:31:14', '2025-05-11 20:31:14'),
+(2, 'admin', '$2y$12$d92ej/5TrtVU877iINU8DunfK7NvnkLvF7I.O3lJKqGXqxWFLDzUe', 'admin@gmail.com', 'admin', '094534634634', '2025-12-13 20:30:45', '2025-12-13 20:30:45');
 
 -- --------------------------------------------------------
 
@@ -64,12 +65,6 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`category_id`, `category_name`, `description`, `created_at`, `updated_at`) VALUES
-(1, 'Toyota', NULL, '2025-05-11 20:31:36', '2025-05-11 23:21:04'),
-(2, 'Honda', NULL, '2025-05-24 23:19:23', '2025-05-24 23:19:23'),
-(3, 'suzuki', NULL, '2025-05-27 03:34:05', '2025-05-27 03:34:05'),
-(4, 'BYD', NULL, '2025-05-27 03:34:19', '2025-05-27 03:34:19'),
-(5, 'Volvo', NULL, '2025-05-27 03:34:50', '2025-05-27 03:34:50'),
-(6, 'Wulling', NULL, '2025-05-27 03:35:02', '2025-05-27 03:35:02'),
 (7, 'Boneka cakil', 'cakil', '2025-11-23 04:18:42', '2025-11-23 04:18:42');
 
 -- --------------------------------------------------------
@@ -122,7 +117,8 @@ CREATE TABLE `customers` (
 INSERT INTO `customers` (`customer_id`, `username`, `password`, `email`, `full_name`, `phone_number`, `address`, `created_at`, `updated_at`) VALUES
 (1, 'asep', '123', 'asep@gmail.com', 'asep robianaa', '08080844', 'tigaraksa', '2025-05-12 02:02:17', '2025-05-28 22:46:24'),
 (2, 'felan', '$2y$12$.ujiXE.7fykrP4ISt6n9i.Cetd5LsCat7VgM2ar47.a2fudklAmVK', 'felan@gmail.com', 'felan', '0852697567', 'pasar kemis', '2025-06-08 06:23:44', '2025-06-08 06:23:44'),
-(3, 'prisma', '$2y$12$PpGXT1kl0srPSGQEwqHqau69KyT0NIVfpd/HZmLugZWZvLXZPWM5m', 'prisma@gmail.com', 'prisma', '0185875555', 'Cikupa', '2025-06-14 06:16:02', '2025-06-14 06:16:02');
+(3, 'prisma', '$2y$12$PpGXT1kl0srPSGQEwqHqau69KyT0NIVfpd/HZmLugZWZvLXZPWM5m', 'prisma@gmail.com', 'prisma', '0185875555', 'Cikupa', '2025-06-14 06:16:02', '2025-06-14 06:16:02'),
+(4, 'user', '$2y$12$iwRWfDQ9B.HtA1kspnEFsOfO8LNXA0h/mLGprzneSLhmFs1UglHwK', 'user@gmail.com', 'user', '085691185824', 'pasar kemis tangerang', '2025-12-13 20:28:56', '2025-12-13 20:28:56');
 
 -- --------------------------------------------------------
 
@@ -150,43 +146,41 @@ CREATE TABLE `orders` (
   `order_id` bigint UNSIGNED NOT NULL,
   `customer_id` bigint UNSIGNED NOT NULL,
   `order_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('menunggu','diproses','dikirim','selesai','dibatalkan') COLLATE utf8mb4_unicode_ci DEFAULT 'menunggu',
+  `payment_method` enum('cod','gateway') COLLATE utf8mb4_unicode_ci NOT NULL,
   `total_price` decimal(25,2) NOT NULL,
-  `bukti_pesanan` int NOT NULL,
-  `ktp` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `stnk` enum('pending','diproses','delivered','diterima') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
-  `bpkb` enum('pending','diproses','delivered','diterima') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
-  `logistik` enum('request_pickup','pickup') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `shipping_cost` decimal(12,2) DEFAULT '0.00',
+  `grand_total` decimal(25,2) NOT NULL,
+  `receiver_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `receiver_phone` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `shipping_address` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `customer_note` text COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NOT NULL,
-  `updated_at` timestamp NOT NULL,
-  `status` enum('Menunggu','Dikonfirmasi','DP','Lunas','Batal') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Menunggu',
-  `sisa_tagihan` decimal(25,2) NOT NULL
+  `updated_at` timestamp NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `orders`
 --
 
-INSERT INTO `orders` (`order_id`, `customer_id`, `order_date`, `total_price`, `bukti_pesanan`, `ktp`, `stnk`, `bpkb`, `logistik`, `created_at`, `updated_at`, `status`, `sisa_tagihan`) VALUES
-(43, 1, '2025-06-14 17:00:00', '200500000.00', 500000, '1749995879.jpg', 'diproses', 'diproses', NULL, '2025-06-15 06:57:59', '2025-06-15 07:02:49', 'Lunas', '0.00'),
-(44, 1, '2025-06-14 17:00:00', '40000500000.00', 500000, '1749996042.jpg', 'diproses', 'diproses', NULL, '2025-06-15 07:00:42', '2025-06-15 07:03:15', 'DP', '28000000000.00'),
-(45, 1, '2025-06-14 17:00:00', '500500000.00', 500000, '1749996108.jpg', 'pending', 'pending', NULL, '2025-06-15 07:01:48', '2025-06-15 07:03:29', 'Dikonfirmasi', '500000000.00'),
-(46, 1, '2025-06-14 17:00:00', '500500000.00', 500000, '1749996233.jpg', 'pending', 'pending', NULL, '2025-06-15 07:03:53', '2025-06-15 07:03:53', 'Menunggu', '500500000.00'),
-(47, 2, '2025-05-03 17:00:00', '5000500000.00', 500000, '1749996455.jpg', 'diproses', 'diproses', NULL, '2025-06-15 07:07:35', '2025-06-15 07:08:00', 'Lunas', '0.00'),
-(48, 2, '2024-12-10 17:00:00', '300500000.00', 500000, '1749996502.jpg', 'diproses', 'diproses', NULL, '2025-06-15 07:08:22', '2025-06-15 07:10:12', 'Lunas', '0.00'),
-(49, 2, '2022-12-07 17:00:00', '300500000.00', 500000, '1749998006.jpg', 'diproses', 'diproses', 'request_pickup', '2025-06-15 07:10:58', '2025-06-15 07:33:26', 'Lunas', '0.00'),
-(50, 2, '2025-11-18 17:00:00', '5000500000.00', 500000, '1763568105.png', 'pending', 'pending', NULL, '2025-11-19 09:01:45', '2025-11-20 07:45:14', 'Batal', '5000000000.00'),
-(51, 2, '2025-11-19 17:00:00', '1000500000.00', 500000, '1763648314.png', 'diproses', 'diproses', NULL, '2025-11-20 07:18:34', '2025-11-20 09:26:10', 'Lunas', '0.00'),
-(52, 2, '2025-11-19 17:00:00', '400500000.00', 500000, '1763649699.png', 'diproses', 'diproses', NULL, '2025-11-20 07:41:39', '2025-11-22 18:54:21', 'DP', '280000000.00'),
-(53, 2, '2025-11-19 17:00:00', '5000500000.00', 500000, '1763650224.png', 'pending', 'pending', NULL, '2025-11-20 07:50:24', '2025-11-20 07:50:24', 'Menunggu', '5000500000.00'),
-(54, 2, '2025-11-19 17:00:00', '200500000.00', 500000, '1763651337.png', 'pending', 'pending', NULL, '2025-11-20 08:08:57', '2025-11-20 08:08:57', 'Menunggu', '200500000.00'),
-(55, 2, '2025-11-19 17:00:00', '200500000.00', 500000, '1763653298.png', 'pending', 'pending', NULL, '2025-11-20 08:41:38', '2025-11-20 08:41:38', 'Menunggu', '200500000.00'),
-(56, 2, '2025-11-22 17:00:00', '200500000.00', 500000, '1763864537.png', 'pending', 'pending', NULL, '2025-11-22 19:22:17', '2025-11-22 20:12:17', 'Dikonfirmasi', '200000000.00'),
-(57, 2, '2025-11-22 17:00:00', '400500000.00', 500000, '1763867106.png', 'pending', 'pending', NULL, '2025-11-22 20:05:06', '2025-11-22 20:13:53', 'Dikonfirmasi', '400000000.00'),
-(58, 2, '2025-11-22 17:00:00', '200500000.00', 500000, '1763867176.png', 'pending', 'pending', NULL, '2025-11-22 20:06:16', '2025-11-22 20:06:16', 'Menunggu', '200500000.00'),
-(59, 3, '2025-11-22 17:00:00', '3000500000.00', 500000, '1763896848.png', 'diproses', 'diproses', NULL, '2025-11-23 04:20:48', '2025-11-23 08:12:09', 'Lunas', '0.00'),
-(60, 3, '2025-11-22 17:00:00', '200500000.00', 500000, '1763896956.png', 'diproses', 'diproses', NULL, '2025-11-23 04:22:36', '2025-11-23 08:12:57', 'DP', '140000000.00'),
-(61, 3, '2025-11-22 17:00:00', '400500000.00', 500000, '1763897868.png', 'diproses', 'diproses', NULL, '2025-11-23 04:37:48', '2025-11-23 07:52:10', 'Lunas', '0.00'),
-(62, 3, '2025-11-22 17:00:00', '200500000.00', 500000, '1763909681.png', 'diproses', 'diproses', NULL, '2025-11-23 07:54:41', '2025-11-23 08:06:31', 'Lunas', '0.00');
+INSERT INTO `orders` (`order_id`, `customer_id`, `order_date`, `status`, `payment_method`, `total_price`, `shipping_cost`, `grand_total`, `receiver_name`, `receiver_phone`, `shipping_address`, `customer_note`, `created_at`, `updated_at`) VALUES
+(43, 1, '2025-06-14 17:00:00', 'menunggu', 'cod', '200500000.00', '0.00', '0.00', '', '', '', NULL, '2025-06-15 06:57:59', '2025-06-15 07:02:49'),
+(44, 1, '2025-06-14 17:00:00', 'menunggu', 'cod', '40000500000.00', '0.00', '0.00', '', '', '', NULL, '2025-06-15 07:00:42', '2025-06-15 07:03:15'),
+(45, 1, '2025-06-14 17:00:00', 'menunggu', 'cod', '500500000.00', '0.00', '0.00', '', '', '', NULL, '2025-06-15 07:01:48', '2025-06-15 07:03:29'),
+(46, 1, '2025-06-14 17:00:00', 'menunggu', 'cod', '500500000.00', '0.00', '0.00', '', '', '', NULL, '2025-06-15 07:03:53', '2025-06-15 07:03:53'),
+(59, 3, '2025-11-22 17:00:00', 'menunggu', 'cod', '3000500000.00', '0.00', '0.00', '', '', '', NULL, '2025-11-23 04:20:48', '2025-11-23 08:12:09'),
+(60, 3, '2025-11-22 17:00:00', 'menunggu', 'cod', '200500000.00', '0.00', '0.00', '', '', '', NULL, '2025-11-23 04:22:36', '2025-11-23 08:12:57'),
+(61, 3, '2025-11-22 17:00:00', 'menunggu', 'cod', '400500000.00', '0.00', '0.00', '', '', '', NULL, '2025-11-23 04:37:48', '2025-11-23 07:52:10'),
+(62, 3, '2025-11-22 17:00:00', 'menunggu', 'cod', '200500000.00', '0.00', '0.00', '', '', '', NULL, '2025-11-23 07:54:41', '2025-11-23 08:06:31'),
+(69, 2, '2025-12-13 10:43:12', 'menunggu', 'gateway', '1000000.00', '10000.00', '1010000.00', 'felan', '0852697567', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaa', '2025-12-13 10:43:42', '2025-12-13 10:50:29'),
+(72, 2, '2025-12-13 11:48:13', 'menunggu', 'cod', '560000.00', '10000.00', '570000.00', 'felan', '0852697567', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaaaa', '2025-12-13 11:48:30', '2025-12-13 11:48:30'),
+(73, 4, '2025-12-13 20:51:58', 'diproses', 'gateway', '1400000.00', '10000.00', '1410000.00', 'user', '085691185824', 'pasar kemis tangerang', NULL, '2025-12-13 20:52:19', '2025-12-13 23:32:03'),
+(75, 4, '2025-12-13 20:55:58', 'dibatalkan', 'cod', '1960000.00', '10000.00', '1970000.00', 'user', '085691185824', 'pasar kemis tangerang', NULL, '2025-12-13 20:56:11', '2025-12-13 22:49:22'),
+(77, 4, '2025-12-14 04:12:33', 'dibatalkan', 'cod', '1000000.00', '20000.00', '32000.00', 'asep', '65856567567', 'tahgfdass', NULL, '2025-12-14 04:14:27', '2025-12-13 21:17:34'),
+(78, 4, '2025-12-13 21:18:17', 'dibatalkan', 'cod', '560000.00', '15000.00', '575000.00', 'user', '085691185824', 'pasar kemis tangerang', NULL, '2025-12-13 21:18:48', '2025-12-13 22:49:18'),
+(79, 4, '2025-12-13 21:20:04', 'dibatalkan', 'cod', '1400000.00', '10000.00', '1410000.00', 'user', '085691185824', 'pasar kemis tangerang', NULL, '2025-12-13 21:20:17', '2025-12-13 22:49:09'),
+(80, 4, '2025-12-13 21:45:02', 'diproses', 'cod', '1400000.00', '10000.00', '1410000.00', 'user', '085691185824', 'pasar kemis tangerang', NULL, '2025-12-13 21:45:19', '2025-12-13 21:45:19'),
+(81, 4, '2025-12-13 23:09:02', 'diproses', 'gateway', '1400000.00', '10000.00', '1410000.00', 'user', '085691185824', 'pasar kemis tangerang', NULL, '2025-12-13 23:09:13', '2025-12-13 23:31:06');
 
 -- --------------------------------------------------------
 
@@ -207,39 +201,15 @@ CREATE TABLE `order_details` (
 --
 
 INSERT INTO `order_details` (`order_detail_id`, `order_id`, `product_id`, `quantity`, `price`) VALUES
-(44, 43, 72, 1, '200000000.00'),
-(45, 44, 61, 1, '40000000000.00'),
-(46, 45, 65, 1, '500000000.00'),
-(47, 46, 60, 1, '500000000.00'),
-(48, 47, 62, 1, '5000000000.00'),
-(49, 48, 69, 1, '300000000.00'),
-(54, 53, 67, 1, '5000000000.00'),
-(55, 54, 72, 1, '200000000.00'),
-(56, 55, 72, 1, '200000000.00'),
-(57, 56, 72, 1, '200000000.00'),
-(59, 58, 72, 1, '200000000.00'),
-(61, 60, 72, 1, '200000000.00'),
-(62, 61, 72, 2, '200000000.00'),
-(63, 62, 72, 1, '200000000.00');
-
---
--- Triggers `order_details`
---
-DELIMITER $$
-CREATE TRIGGER `reduce_stock_after_order` AFTER INSERT ON `order_details` FOR EACH ROW BEGIN
-    -- Mengurangi stok produk berdasarkan `product_id` dan jumlah `quantity` yang dipesan
-    UPDATE `products`
-    SET `stock` = `stock` - NEW.`quantity`
-    WHERE `product_id` = NEW.`product_id`;
-
-    -- Pastikan stok tidak negatif
-    IF (SELECT `stock` FROM `products` WHERE `product_id` = NEW.`product_id`) < 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Stock tidak mencukupi!';
-    END IF;
-END
-$$
-DELIMITER ;
+(70, 69, 3, 1, '1000000.00'),
+(73, 72, 3, 1, '1000000.00'),
+(74, 73, 1, 1, '2000000.00'),
+(76, 75, 3, 1, '1000000.00'),
+(77, 75, 3, 1, '2000000.00'),
+(79, 78, 3, 1, '1000000.00'),
+(80, 79, 1, 1, '2000000.00'),
+(81, 80, 1, 1, '2000000.00'),
+(82, 81, 1, 1, '2000000.00');
 
 -- --------------------------------------------------------
 
@@ -264,7 +234,6 @@ CREATE TABLE `pembayaran` (
   `order_id` bigint UNSIGNED NOT NULL,
   `tanggal_pembayaran` date DEFAULT NULL,
   `jumlah_bayar` decimal(50,2) DEFAULT NULL,
-  `metode` enum('tunai','transfer') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `bukti_bayar` varchar(255) DEFAULT NULL,
   `snap_token` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -273,39 +242,9 @@ CREATE TABLE `pembayaran` (
 -- Dumping data for table `pembayaran`
 --
 
-INSERT INTO `pembayaran` (`id_pembayaran`, `order_id`, `tanggal_pembayaran`, `jumlah_bayar`, `metode`, `bukti_bayar`, `snap_token`) VALUES
-(135, 43, '2025-06-15', '500000.00', 'transfer', '1749995965_bukti bayar.jpg', ''),
-(136, 43, '2025-06-15', '60000000.00', 'tunai', NULL, ''),
-(151, 52, '2025-11-20', '500000.00', 'transfer', '1763655817_Screenshot 2025-11-16 143248.png', ''),
-(152, 51, '2025-11-20', '500000.00', 'transfer', '1763655841_Screenshot 2025-11-16 143248.png', ''),
-(153, 51, '2025-11-20', '300000000.00', 'transfer', '1763655907_Screenshot 2025-11-16 143248.png', ''),
-(154, 51, '2025-11-20', '700000000.00', 'transfer', NULL, ''),
-(155, 52, '2025-11-23', '120000000.00', 'transfer', '1763862861_Screenshot 2025-11-16 143248.png', NULL),
-(156, 56, '2025-11-23', '500000.00', 'transfer', '1763867536_Screenshot 2025-11-16 143248.png', NULL),
-(157, 57, '2025-11-23', '500000.00', 'transfer', '1763867633_Screenshot 2025-11-16 143248.png', NULL),
-(158, 59, '2025-11-23', '500000.00', 'transfer', '1763897064_welcome2.png', NULL),
-(159, 60, '2025-11-23', '500000.00', 'transfer', '1763897159_Screenshot 2025-11-16 143248.png', NULL),
-(160, 61, '2025-11-23', '500000.00', 'transfer', '1763898017_Screenshot 2025-11-16 143248.png', NULL),
-(161, 61, '2025-11-23', '120000000.00', 'transfer', '1763898115_Screenshot 2025-11-16 143248.png', NULL),
-(162, 61, '2025-11-23', '280000000.00', 'tunai', NULL, NULL),
-(163, 62, '2025-11-23', '500000.00', 'transfer', '1763909745_Screenshot 2025-11-16 143248.png', NULL),
-(164, 62, '2025-11-23', '60000000.00', 'transfer', '1763910286_Screenshot 2025-11-16 143248.png', NULL),
-(165, 62, '2025-11-23', '140000000.00', 'transfer', '1763910391_Screenshot 2025-11-16 143248.png', NULL),
-(166, 59, '2025-11-23', '900000000.00', 'tunai', NULL, NULL),
-(167, 59, '2025-11-23', '2100000000.00', 'transfer', '1763910729_Screenshot 2025-11-16 143248.png', NULL),
-(168, 60, '2025-11-23', '60000000.00', 'transfer', '1763910777_Screenshot 2025-11-16 143248.png', NULL);
-
---
--- Triggers `pembayaran`
---
-DELIMITER $$
-CREATE TRIGGER `kurangi_sisa_tagihan` AFTER INSERT ON `pembayaran` FOR EACH ROW BEGIN
-  UPDATE orders
-  SET sisa_tagihan = sisa_tagihan - NEW.jumlah_bayar
-  WHERE order_id = NEW.order_id;
-END
-$$
-DELIMITER ;
+INSERT INTO `pembayaran` (`id_pembayaran`, `order_id`, `tanggal_pembayaran`, `jumlah_bayar`, `bukti_bayar`, `snap_token`) VALUES
+(176, 81, '2025-12-14', '1410000.00', 'bukti_pembayaran/1765693866_nailong3.jpg', NULL),
+(177, 73, '2025-12-14', '1410000.00', 'bukti_pembayaran/1765693923_nailong3.jpg', NULL);
 
 -- --------------------------------------------------------
 
@@ -334,42 +273,35 @@ CREATE TABLE `personal_access_tokens` (
 
 CREATE TABLE `products` (
   `product_id` bigint UNSIGNED NOT NULL,
-  `product_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `category_id` bigint UNSIGNED DEFAULT NULL,
+  `sku` varchar(100) DEFAULT NULL,
+  `product_name` varchar(150) NOT NULL,
+  `description` text,
   `price` decimal(30,2) NOT NULL,
-  `stock` int NOT NULL,
-  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `image_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `image_url2` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `image_url3` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `image_url4` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `image_url5` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` timestamp NOT NULL,
-  `updated_at` timestamp NOT NULL,
-  `warna` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` enum('pending','approved','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
-  `created_by_id` int NOT NULL,
-  `created_by_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `discount` int DEFAULT '0',
+  `harga_jual` decimal(30,2) DEFAULT NULL,
+  `stock` int DEFAULT '0',
+  `weight` int DEFAULT NULL,
+  `dimension_length` int DEFAULT NULL,
+  `dimension_width` int DEFAULT NULL,
+  `dimension_height` int DEFAULT NULL,
+  `image_url` varchar(255) DEFAULT NULL,
+  `image_url2` varchar(255) DEFAULT NULL,
+  `image_url3` varchar(255) DEFAULT NULL,
+  `image_url4` varchar(255) DEFAULT NULL,
+  `image_url5` varchar(255) DEFAULT NULL,
+  `category_id` int DEFAULT NULL,
+  `shipping_cost_total` decimal(15,2) DEFAULT '0.00',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`product_id`, `product_name`, `category_id`, `price`, `stock`, `description`, `image_url`, `image_url2`, `image_url3`, `image_url4`, `image_url5`, `created_at`, `updated_at`, `warna`, `status`, `created_by_id`, `created_by_type`) VALUES
-(59, 'ERTIGA', 3, '300000000.00', 0, 'jika cocok dihati boleh laangsung dimahar!', '1748342187.jpg', NULL, NULL, NULL, NULL, '2025-05-27 03:36:28', '2025-06-08 02:21:36', 'putih', 'approved', 1, 'App\\Models\\Admin'),
-(60, 'mobil listrik', 4, '500000000.00', 0, 'jika cocok dihati boleh laangsung dimahar!', '1748342237.jpg', NULL, NULL, NULL, NULL, '2025-05-27 03:37:17', '2025-06-08 02:21:29', 'putih', 'approved', 1, 'App\\Models\\Admin'),
-(61, 'Supra', 1, '40000000000.00', 0, 'jika cocok dihati boleh laangsung dimahar!', '1748342286.jpg', NULL, NULL, NULL, NULL, '2025-05-27 03:38:06', '2025-06-08 02:21:24', 'putih', 'approved', 1, 'App\\Models\\Admin'),
-(62, 'Volvo', 5, '5000000000.00', 0, 'jika cocok dihati boleh laangsung dimahar!', '1748342343.jpg', NULL, NULL, NULL, NULL, '2025-05-27 03:39:03', '2025-06-08 02:21:17', 'putih', 'approved', 1, 'App\\Models\\Admin'),
-(63, 'wulling', 6, '400000000.00', 0, 'jika cocok dihati boleh laangsung dimahar!', '1748342418.jpg', NULL, NULL, NULL, NULL, '2025-05-27 03:40:19', '2025-06-08 02:20:58', 'putih', 'approved', 1, 'App\\Models\\Admin'),
-(65, 'inova venturer', 1, '500000000.00', 0, 'jika cocok dihati boleh laangsung dimahar!', '1748342842.jpg', NULL, NULL, NULL, NULL, '2025-05-27 03:47:22', '2025-06-08 02:21:09', 'putih', 'approved', 1, 'App\\Models\\Customer'),
-(66, 'lamborgini', 1, '1000000000.00', 0, 'jika cocok dihati boleh laangsung dimahar!', '1749993992.png', NULL, NULL, NULL, NULL, '2025-06-05 23:38:51', '2025-06-15 06:26:32', 'putih', 'approved', 1, 'App\\Models\\Customer'),
-(67, 'mustang', 3, '5000000000.00', 0, 'jika cocok dihati boleh laangsung dimahar!', '1749994072.png', NULL, NULL, NULL, NULL, '2025-06-05 23:40:06', '2025-06-15 06:27:52', 'putih', 'approved', 1, 'App\\Models\\Admin'),
-(68, 'angkot', 1, '3000000.00', 1, 'jika cocok dihati boleh laangsung dimahar!', '1749389409.png', NULL, NULL, NULL, NULL, '2025-06-08 06:30:09', '2025-06-08 06:30:09', 'coklat', 'pending', 2, 'App\\Models\\Customer'),
-(69, 'avanza', 1, '300000000.00', 0, 'jika cocok dihati boleh laangsung dimahar!', '1749994022.png', NULL, NULL, NULL, NULL, '2025-06-14 06:24:30', '2025-06-15 06:27:02', 'abu abu', 'approved', 3, 'App\\Models\\Customer'),
-(70, 'Seal', 4, '5000000000.00', 0, 'jika cocok dihati boleh laangsung dimahar!', '1749994199.png', NULL, NULL, NULL, NULL, '2025-06-14 10:07:33', '2025-06-15 06:29:59', 'putih', 'approved', 1, 'App\\Models\\Customer'),
-(72, 'jazz', 2, '200000000.00', 199996, 'ssss', '1749995704.png', NULL, NULL, NULL, NULL, '2025-06-15 06:55:04', '2025-11-23 04:21:33', 'putih', 'approved', 1, 'App\\Models\\Customer'),
-(73, 'boneka seram', 1, '50000.00', 1, 'dfdsfsd', '1763896791.png', NULL, NULL, NULL, NULL, '2025-11-23 04:19:51', '2025-11-23 04:19:51', 'merah', 'pending', 3, 'App\\Models\\Customer');
+INSERT INTO `products` (`product_id`, `sku`, `product_name`, `description`, `price`, `discount`, `harga_jual`, `stock`, `weight`, `dimension_length`, `dimension_width`, `dimension_height`, `image_url`, `image_url2`, `image_url3`, `image_url4`, `image_url5`, `category_id`, `shipping_cost_total`, `created_at`, `updated_at`) VALUES
+(1, 'TRANS', 'Optimus Prime', 'Classic Transformers Action Figure Patung Pajangan Figure Transformers Class 01 - Optimus Prime\r\n\r\nBerlisensi Resmi (Official Licensed)\r\nTinggi Produk saat sudah dirakit = 13cm\r\nUntuk usia 12+ (12 tahun keatas) Tidak disarankan untuk anak dibawah umur 3 tahun\r\n\r\nLegendary commander of the heroic Autobots, Optimus Prime is a tireless defender of freedom, the common good, and the right of all sentient beings to determine their destiny. He believes every Autobot hes lost in battle is too many. His drive to protect those who remain and the humans they live among, will not stop until the Decepticon threat has been neutralized and his Autobots have returned to their home world of Cybertron.\r\n\r\nPackaging : With Box\r\nReady small kits for assembly directly\r\nNo brush required\r\nNo glue Required\r\nNo cutters required\r\n\r\nHampir semua bagian figur(kaki, tangan) dapat digerakkan untuk mendapatkan pose/postur bertarung yang keren!\r\n+Material : High Quality ABS\r\n+Finishing halus warna cerah\r\n+Detail Sangat Bagus, Presisi dan Modern\r\n+Sangat layak untuk dikoleksi,buat pajangan, objek foto, dsb\r\n\r\nCatatan :\r\n*Untuk proses komplain, mohon menyertakan video unboxing paket, foto resi dan foto produk berkendala/rusak untuk mempermudah validasi. Jika tidak ada bukti yang diminta, komplain tidak bisa diteruskan dan dianggap tidak sah, kecuali memang ada kesalahan dari pihak penjual.\r\n*Apabila kerusakan hanya terjadi pada bagian luar paket, Pembeli bisa melakukan komplain langsung ke Pihak Ekspedisi.', '2000000.00', 30, '1400000.00', 3, NULL, NULL, NULL, NULL, '1765683141.jpg', NULL, NULL, NULL, NULL, 7, '0.00', '2025-12-09 08:51:13', '2025-12-13 23:09:13'),
+(3, 'NAILONG', 'nailong', 'sdfsdfsf', '1000000.00', 44, '560000.00', 0, NULL, NULL, NULL, NULL, '1765633532.jpg', NULL, NULL, NULL, NULL, 3, '0.00', '2025-12-11 05:50:36', '2025-12-13 21:18:48');
 
 -- --------------------------------------------------------
 
@@ -482,8 +414,7 @@ ALTER TABLE `personal_access_tokens`
 -- Indexes for table `products`
 --
 ALTER TABLE `products`
-  ADD PRIMARY KEY (`product_id`),
-  ADD KEY `fk_products_category` (`category_id`);
+  ADD PRIMARY KEY (`product_id`);
 
 --
 -- Indexes for table `sessions`
@@ -508,7 +439,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `admin`
 --
 ALTER TABLE `admin`
-  MODIFY `admin_id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `admin_id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `categories`
@@ -526,7 +457,7 @@ ALTER TABLE `contact_us`
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `customer_id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `customer_id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`
@@ -538,19 +469,19 @@ ALTER TABLE `failed_jobs`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+  MODIFY `order_id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
 
 --
 -- AUTO_INCREMENT for table `order_details`
 --
 ALTER TABLE `order_details`
-  MODIFY `order_detail_id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+  MODIFY `order_detail_id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
 
 --
 -- AUTO_INCREMENT for table `pembayaran`
 --
 ALTER TABLE `pembayaran`
-  MODIFY `id_pembayaran` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=169;
+  MODIFY `id_pembayaran` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=178;
 
 --
 -- AUTO_INCREMENT for table `personal_access_tokens`
@@ -562,7 +493,7 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
+  MODIFY `product_id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -584,20 +515,14 @@ ALTER TABLE `orders`
 -- Constraints for table `order_details`
 --
 ALTER TABLE `order_details`
-  ADD CONSTRAINT `order_details_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `order_details_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `FK_OrderDetails_Products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`),
+  ADD CONSTRAINT `order_details_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `pembayaran`
 --
 ALTER TABLE `pembayaran`
   ADD CONSTRAINT `pembayaran_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`);
-
---
--- Constraints for table `products`
---
-ALTER TABLE `products`
-  ADD CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `sessions`

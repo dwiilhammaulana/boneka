@@ -30,16 +30,19 @@ class CartController extends Controller
         $cart[$productId]['quantity'] += $quantity;
     } else {
         // Tambahkan item baru ke keranjang
-        $cart[$productId] = [
-            'name' => $product->product_name,
-            'price' => $product->price,
-            'quantity' => $quantity,
-            'image' => $product->image_url,
-            'warna' => $product->warna,
-            'tahun' => $product->tahun,
-            'kilometer' => $product->kilometer,
-            'category_id' => $product->category_id,
-        ];
+$cart[$productId] = [
+    'name' => $product->product_name,
+    'price' => $product->price,
+    'discount' => $product->discount,     // ✅ AMBIL LANGSUNG DARI DB
+    'harga_jual' => $product->harga_jual, // ✅ AMBIL LANGSUNG DARI DB
+    'quantity' => $quantity,
+    'image' => $product->image_url,
+    'warna' => $product->warna,
+    'tahun' => $product->tahun,
+    'kilometer' => $product->kilometer,
+    'category_id' => $product->category_id,
+];
+
     }
 
     // Simpan keranjang kembali ke session

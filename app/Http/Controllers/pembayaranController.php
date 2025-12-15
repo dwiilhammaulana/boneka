@@ -4,16 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pembayaran;
-use App\Models\orders; 
-// Menggunakan model orders
+use App\Models\Orders;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Midtrans\Snap;
 use Midtrans\Config;
 
+
 class PembayaranController extends Controller
 {
+
 
      public function getSnapToken(Request $request)
     {
@@ -35,20 +35,15 @@ class PembayaranController extends Controller
 
         // buat transaction details
         $transactionId = 'GT-' . time() . '-' . $order->order_id;
-        $grossAmount = (int) $order->sisa_tagihan; // nominal yang akan dibayar via Midtrans
+        $grossAmount = (int) $order->grand_total; // nominal yang akan dibayar via Midtrans
 
         $params = [
-            'transaction_details' => [
-                'order_id' => $transactionId,
-                'gross_amount' => $grossAmount,
-            ],
-            'customer_details' => [
-                'first_name' => optional($order->customer)->name ?? 'Customer',
-                'email' => optional($order->customer)->email ?? 'no-reply@example.com',
-                'phone' => optional($order->customer)->phone ?? '000',
-            ],
-            'enabled_payments' => null, // null = default allowed methods; atur array jika ingin
-        ];
+             'transaction_details' => [
+        'order_id' => $transactionId,
+        'gross_amount' => $grossAmount,
+    ],
+    'custom_field1' => $order->order_id, // ⭐ PENTING
+];
 
         try {
             $snapToken = Snap::getSnapToken($params);
@@ -100,12 +95,14 @@ class PembayaranController extends Controller
                 }
             } elseif ($transactionStatus == 'settlement') {
                 // dana settled (sukses)
-                $order->status = 'Lunas';
+                $order->status = 'menunggu';
                 $order->sisa_tagihan = 0;
-            } elseif ($transactionStatus == 'pending') {
-                $order->status = 'Pending';
+            } elseif ($transactionStatus == 'diproses') {
+                $order->status = 'Diproses';
+             } elseif ($transactionStatus == 'dikirim') {
+                $order->status = 'Dikirim';     
             } elseif ($transactionStatus == 'deny' || $transactionStatus == 'cancel' || $transactionStatus == 'expire') {
-                $order->status = 'Gagal';
+                $order->status = 'Dibatalkan';
             }
 
             $order->save();
@@ -117,7 +114,6 @@ class PembayaranController extends Controller
                 'jenis_pembayaran' => 'midtrans',
                 'jumlah_bayar' => $notif->gross_amount ?? 0,
                 'metode' => $notif->payment_type ?? 'midtrans',
-                'bukti_bayar' => null,
             ]);
 
             return response('OK', 200);
@@ -126,199 +122,232 @@ class PembayaranController extends Controller
             return response('Error', 500);
         }
     }
+
     /**
-     * Menampilkan daftar semua pembayaran.
+     * -------- FORM CREATE PEMBAYARAN --------
      */
-    public function index(): View
+    public function create(Request $request)
     {
-        $pembayaran = pembayaran::orderBy('tanggal_pembayaran', 'DESC')->get();
+        if (!Auth::guard('customer')->check()) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+        }
+        
+        $order = Orders::where('order_id', $request->order_id)
+            ->where('customer_id', Auth::guard('customer')->user()->customer_id)
+            ->where('status', 'menunggu')
+            ->where('payment_method', 'gateway')
+            ->firstOrFail();
+        
+        return view('public.pembayaran.create', compact('order'));
+    }
+
+    /**
+     * -------- STORE PEMBAYARAN --------
+     */
+    public function store(Request $request)
+    {
+        if (!Auth::guard('customer')->check()) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $request->validate([
+            'order_id' => 'required|exists:orders,order_id',
+            'jumlah_bayar' => 'required|numeric|min:1',
+            'tanggal_pembayaran' => 'required|date',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Cek order
+            $order = Orders::where('order_id', $request->order_id)
+                ->where('customer_id', Auth::guard('customer')->user()->customer_id)
+                ->where('status', 'menunggu')
+                ->where('payment_method', 'gateway')
+                ->firstOrFail();
+
+            // Validasi jumlah bayar harus sama dengan grand_total
+            if ($request->jumlah_bayar != $order->grand_total) {
+                throw new \Exception('Jumlah pembayaran harus sama dengan total pesanan: Rp ' . number_format($order->grand_total, 0, ',', '.'));
+            }
+
+           
+            // Simpan pembayaran
+            $pembayaran = Pembayaran::create([
+                'order_id' => $order->order_id,
+                'tanggal_pembayaran' => $request->tanggal_pembayaran,
+                'jumlah_bayar' => $request->jumlah_bayar,
+               
+                'snap_token' => null,
+            ]);
+
+            // LOGIKA UTAMA: Update status order menjadi diproses
+            $order->status = 'diproses';
+            $order->save();
+
+            DB::commit();
+
+            return redirect()->route('public.pesanan')
+                ->with('success', 'Pembayaran berhasil dikirim! Pesanan sedang diproses.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'Gagal menyimpan pembayaran: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * -------- INDEX PEMBAYARAN (Admin) --------
+     */
+    public function index()
+    {
+        $pembayaran = Pembayaran::with('order')
+            ->orderBy('tanggal_pembayaran', 'DESC')
+            ->get();
         return view('pembayaran.index', compact('pembayaran'));
     }
 
     /**
-     * Menampilkan detail pembayaran tertentu.
+     * DETAIL PEMBAYARAN
      */
-    public function show($id): View
+    public function show($id)
     {
-        $pembayaran = pembayaran::findOrFail($id);
+        $pembayaran = Pembayaran::with('order')->findOrFail($id);
         return view('pembayaran.show', compact('pembayaran'));
     }
 
+    /**
+     * API: Ambil pembayaran berdasarkan Order ID
+     */
     public function pembayaran($orderId)
-{
-    $pembayaran = pembayaran::where('order_id', $orderId)->first();
+    {
+        $pembayaran = Pembayaran::where('order_id', $orderId)->first();
 
-    if (!$pembayaran) {
-        return response()->json([
-            'message' => 'Data pembayaran tidak ditemukan.'
-        ], 404);
-    }
-
-    return response()->json([
-        'id_pembayaran'      => $pembayaran->id_pembayaran,
-        'order_id'           => $pembayaran->order_id,
-        'tanggal_pembayaran' => $pembayaran->tanggal_pembayaran,
-        'jumlah_bayar'       => $pembayaran->jumlah_bayar
-    ]);
-}
-
-    /**
-     * Menampilkan form untuk input pembayaran baru.
-     */
-   public function create(Request $request)
-{
-    $selectedOrderId = $request->input('order_id');
-    $jenisPembayaran = 'booking'; // Default jenis pembayaran
-
-    // Ambil data orders berdasarkan peran user
-    $orders = collect(); // Default kosong
-
-    if (Auth::guard('admin')->check()) {
-        $orders = Orders::all();
-    } elseif (Auth::guard('customer')->check()) {
-        $customerId = Auth::guard('customer')->id();
-        $orders = Orders::where('customer_id', $customerId)->get();
-    }
-
-    // Cek jenis pembayaran berdasarkan order yang dipilih
-    if ($selectedOrderId) {
-        $order = Orders::find($selectedOrderId);
-
-        if ($order) {
-            // Cek apakah sudah lunas
-            if ($order->sisa_tagihan <= 0) {
-                return redirect()->route('orders.index')->with('info', 'Pembayaran Anda sudah lunas.');
-            }
-
-            $total = $order->total_price;
-            $sisa = $order->sisa_tagihan;
-
-            $bookingAmount = 500000;
-            $hargaSetelahBooking = $total - $bookingAmount;
-            $dpAmount = 0.3 * $hargaSetelahBooking;
-
-            if ($sisa == $total) {
-                $jenisPembayaran = 'booking';
-            } elseif ($sisa > ($total - $dpAmount - $bookingAmount)) {
-                $jenisPembayaran = 'dp';
-            } else {
-                $jenisPembayaran = 'pelunasan';
-            }
+        if (!$pembayaran) {
+            return response()->json([
+                'message' => 'Data pembayaran tidak ditemukan.'
+            ], 404);
         }
+
+        return response()->json([
+            'id_pembayaran'      => $pembayaran->id_pembayaran,
+            'order_id'           => $pembayaran->order_id,
+            'tanggal_pembayaran' => $pembayaran->tanggal_pembayaran,
+            'jumlah_bayar'       => $pembayaran->jumlah_bayar,
+            'bukti_bayar'        => $pembayaran->bukti_bayar
+        ]);
     }
-
-    return view('pembayaran.create', compact('orders', 'selectedOrderId', 'jenisPembayaran'));
-}
-
-
-
-
 
     /**
-     * Menyimpan data pembayaran ke database.
+     * EDIT PEMBAYARAN (Admin)
      */
-    public function store(Request $request)
-{
-    $request->validate([
-        'order_id' => 'required|exists:orders,order_id',
-        'tanggal_pembayaran' => 'required|date',
-        'jenis_pembayaran' => 'required|in:booking,dp,pelunasan',
-    ]);
-
-    $order = Orders::findOrFail($request->order_id);
-
-    // Hitung nominal pembayaran berdasarkan jenis pembayaran
-    $bookingAmount = 500000;
-    $total_price = $order->total_price;
-    $sisaSetelahBooking = $total_price - $bookingAmount;
-    $dpAmount = 0.3 * $sisaSetelahBooking;
-    $sisaSetelahDP = $sisaSetelahBooking - $dpAmount;
-
-    switch ($request->jenis_pembayaran) {
-        case 'booking':
-            $jumlah = $bookingAmount;
-            break;
-        case 'dp':
-            $jumlah = $dpAmount;
-            break;
-        case 'pelunasan':
-            $jumlah = $order->sisa_tagihan;
-            break;
-        default:
-            $jumlah = 0;
-    }
-
-    // Simpan data pembayaran
-    Pembayaran::create([
-        'order_id' => $request->order_id,
-        'tanggal_pembayaran' => $request->tanggal_pembayaran,
-        'jenis_pembayaran' => $request->jenis_pembayaran,
-        'jumlah_bayar' => $jumlah,
-    ]);
-
-    // Update sisa tagihan
-    $order->sisa_tagihan = max(0, $order->sisa_tagihan - $jumlah);
-
-    // Fungsi bantu pembanding float
-    $isEqual = fn($a, $b) => abs($a - $b) < 1;
-
-    // Update status berdasarkan ketentuan
-    if ($isEqual($order->sisa_tagihan, $total_price)) {
-        $order->status = 'Menunggu';
-    } elseif ($isEqual($order->sisa_tagihan, $total_price - $bookingAmount)) {
-        $order->status = 'Dikonfirmasi';
-    } elseif ($isEqual($order->sisa_tagihan, $sisaSetelahDP)) {
-        $order->status = 'DP';
-    } elseif ($order->sisa_tagihan <= 0) {
-        $order->status = 'Lunas';
-    }
-
-    $order->save();
-
-    return redirect()->route('orders.index')->with('success', 'Pembayaran berhasil disimpan.');
-}
-
-
-
-    /**
-     * Menampilkan form edit pembayaran.
-     */
-    public function edit($id): View
+    public function edit($id)
     {
         $pembayaran = Pembayaran::findOrFail($id);
-        $orders = orders::all(); // Untuk pilihan order di dropdown
-        return view('pembayaran.edit', compact('pembayaran', 'orders'));
+        return view('pembayaran.edit', compact('pembayaran'));
     }
 
     /**
-     * Memperbarui data pembayaran.
+     * UPDATE PEMBAYARAN (Admin)
      */
-    public function update(Request $request, $id): RedirectResponse
+    public function update(Request $request, $id)
     {
-        $validatedData = $request->validate([
-            'order_id' => 'required|exists:orders,order_id',
+        $validated = $request->validate([
             'tanggal_pembayaran' => 'required|date',
             'jumlah_bayar' => 'required|numeric|min:0',
         ]);
 
         $pembayaran = Pembayaran::findOrFail($id);
-        $pembayaran->update([
-            'order_id' => $validatedData['order_id'],
-            'tanggal_pembayaran' => $validatedData['tanggal_pembayaran'],
-            'jumlah_bayar' => $validatedData['jumlah_bayar'],
-        ]);
+        $pembayaran->update($validated);
 
-        return redirect()->route('pembayaran.index')->with(['berhasil' => 'Data Pembayaran Berhasil Diupdate!']);
+        return redirect()->route('pembayaran.index')
+            ->with('success', 'Data Pembayaran berhasil diupdate!');
     }
 
     /**
-     * Menghapus data pembayaran.
+     * HAPUS PEMBAYARAN (Admin)
      */
-    public function destroy($id): RedirectResponse
+    public function destroy($id)
     {
         $pembayaran = Pembayaran::findOrFail($id);
+        
+        // Optional: Jika ingin mengembalikan status order ke menunggu saat pembayaran dihapus
+        if ($pembayaran->order) {
+            // Cek apakah ini satu-satunya pembayaran untuk order ini
+            $pembayaranCount = Pembayaran::where('order_id', $pembayaran->order_id)->count();
+            if ($pembayaranCount <= 1) {
+                $pembayaran->order->status = 'menunggu';
+                $pembayaran->order->save();
+            }
+        }
+        
         $pembayaran->delete();
 
-        return redirect()->route('pembayaran.index')->with(['berhasil' => 'Data Pembayaran Berhasil Dihapus!']);
+        return redirect()->route('pembayaran.index')
+            ->with('success', 'Data Pembayaran berhasil dihapus!');
+    }
+
+    /**
+     * VERIFIKASI PEMBAYARAN (Admin) - Mengubah status order menjadi diproses
+     */
+    public function verifikasi($id)
+    {
+        DB::beginTransaction();
+        
+        try {
+            $pembayaran = Pembayaran::with('order')->findOrFail($id);
+            
+            // Cek apakah order terkait ada
+            if ($pembayaran->order) {
+                // LOGIKA: Update status order menjadi diproses setelah verifikasi
+                $pembayaran->order->status = 'diproses';
+                $pembayaran->order->save();
+                
+                DB::commit();
+                
+                return redirect()->back()
+                    ->with('success', 'Pembayaran telah diverifikasi! Status order telah diubah menjadi diproses.');
+            } else {
+                throw new \Exception('Order tidak ditemukan.');
+            }
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'Gagal memverifikasi pembayaran: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * BATALKAN VERIFIKASI PEMBAYARAN (Admin) - Mengembalikan status order ke menunggu
+     */
+    public function batalkanVerifikasi($id)
+    {
+        DB::beginTransaction();
+        
+        try {
+            $pembayaran = Pembayaran::with('order')->findOrFail($id);
+            
+            // Cek apakah order terkait ada
+            if ($pembayaran->order) {
+                // LOGIKA: Kembalikan status order ke menunggu
+                $pembayaran->order->status = 'menunggu';
+                $pembayaran->order->save();
+                
+                DB::commit();
+                
+                return redirect()->back()
+                    ->with('success', 'Verifikasi pembayaran dibatalkan! Status order telah dikembalikan ke menunggu.');
+            } else {
+                throw new \Exception('Order tidak ditemukan.');
+            }
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'Gagal membatalkan verifikasi: ' . $e->getMessage());
+        }
     }
 }
